@@ -9,8 +9,8 @@ privateKeyRing = PrivateKeyRing()
 publicKeyRing = PublicKeyRing()
 
 class KeyGenerationGUI:
-    def __init__(self, root):
-
+    def __init__(self, root, parentWindow):
+        self.parentWindow = parentWindow
         self.root = root
         self.root.title("RSA Key Pair Generation")
         self.root.geometry("300x300")
@@ -48,9 +48,10 @@ class KeyGenerationGUI:
         self.password_entry.pack(pady=5)
         self.generate_button.pack(pady=10)
 
+
     def generate_key_pair(self):
         # Get user inputs
-        name = self.name_entry.get() # sta ce nam ovo ???
+        name = self.name_entry.get()  # sta ce nam ovo ???
         email = self.email_entry.get()
         keySize = self.key_size_var.get()
         passcode = self.password_entry.get()
@@ -81,6 +82,7 @@ class KeyGenerationGUI:
         # Show success message
         messagebox.showinfo("Success", "RSA Key pair generated successfully")
 
+        self.parentWindow.refreshRings(self.parentWindow)
         self.close_window()
 
     def close_window(self):

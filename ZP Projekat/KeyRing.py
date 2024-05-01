@@ -6,7 +6,7 @@ class KeyRing:
     def __init__(self):
         self.keys = []
 
-    def getAllPrivateKeys(self):
+    def getAllKeys(self):
         return self.keys
 
     def getKey(self, keyId):
@@ -31,6 +31,7 @@ class PublicKeyRing(KeyRing):
         super().__init__()
 
     def addKey(self, publicKey, ownerTrust, userId, signatureTrust):
+        # check if key id is already in key ring
         keyId = publicKey.public_numbers().n % (2 ** 64)
         if keyId not in self.keys:
             self.keys.append(PublicKeyRow(publicKey, ownerTrust, userId, signatureTrust))
@@ -44,6 +45,7 @@ class PrivateKeyRing(KeyRing):
         super().__init__()
 
     def addKey(self, publicKey, privateKey, userId):
+        # check if key id is already in key ring
         keyId = publicKey.public_numbers().n % (2 ** 64)
         if keyId not in self.keys:
             self.keys.append(PrivateKeyRow(publicKey, privateKey, userId))
@@ -57,9 +59,8 @@ class KeyRow:
         self.timestamp = datetime.datetime.now()
         self.keyId = publicKey.public_numbers().n % (2 ** 64)
         self.publicKey = publicKey
+        print("///\n" + str(self.publicKey.public_numbers().n) + "\n" + str(self.keyId))
         self.userId = userId
-
-        print(str(self.keyId))
 
 
 # 1 row in PrivateKeyRing
@@ -74,7 +75,7 @@ class PrivateKeyRow(KeyRow):
         pass
 
     def encrypt(self, privateKey):
-        pass
+        return "Hashed value here..."
 
 
 class PublicKeyRow(KeyRow):
