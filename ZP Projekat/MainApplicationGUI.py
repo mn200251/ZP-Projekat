@@ -1,6 +1,9 @@
 import tkinter as tk
+from KeyGenerationGUI import KeyGenerationGUI
 
-class MainApplication:
+
+
+class MainApplicationGUI:
     def __init__(self, root):
         self.buttonWidth = 20
         self.buttonHeight = 2
@@ -26,8 +29,9 @@ class MainApplication:
         self.receive_message_button.pack(pady=10)
 
     def generate_keys(self):
-        # Implement the logic for generating RSA keys
-        pass
+        keygen_window = tk.Toplevel(self.root)
+        keygen_window.grab_set()  # prevents from focusing on main window when this one is active
+        keygen_app = KeyGenerationGUI(keygen_window)
 
     def import_key(self):
         # Implement the logic for importing keys

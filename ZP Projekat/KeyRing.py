@@ -1,3 +1,4 @@
+import datetime
 import time
 
 
@@ -24,18 +25,18 @@ class KeyRing:
 
         # Error - key with that id not found!
 
+
 class PublicKeyRing(KeyRing):
     def __init__(self):
         super().__init__()
 
     def addKey(self, publicKey, ownerTrust, userId, signatureTrust):
-        keyId = publicKey % (2 ** 64)
+        keyId = publicKey.public_numbers().n % (2 ** 64)
         if keyId not in self.keys:
-            self.keys.append(PublicKey(publicKey, ownerTrust, userId, signatureTrust))
+            self.keys.append(PublicKeyRow(publicKey, ownerTrust, userId, signatureTrust))
             return
 
         # Error - key with that id already exists!
-
 
 
 class PrivateKeyRing(KeyRing):
@@ -43,24 +44,26 @@ class PrivateKeyRing(KeyRing):
         super().__init__()
 
     def addKey(self, publicKey, privateKey, userId):
-        keyId = publicKey % (2 ** 64)
+        keyId = publicKey.public_numbers().n % (2 ** 64)
         if keyId not in self.keys:
-            self.keys.append(PrivateKey(publicKey, privateKey, userId))
+            self.keys.append(PrivateKeyRow(publicKey, privateKey, userId))
             return
 
         # Error - key with that id already exists!
 
 
-class Key:
+class KeyRow:
     def __init__(self, publicKey, userId):
-        self.timestamp = time.time()
-        self.keyId = publicKey % (2 ** 64)
+        self.timestamp = datetime.datetime.now()
+        self.keyId = publicKey.public_numbers().n % (2 ** 64)
         self.publicKey = publicKey
         self.userId = userId
 
+        print(str(self.keyId))
+
 
 # 1 row in PrivateKeyRing
-class PrivateKey(Key):
+class PrivateKeyRow(KeyRow):
     def __init__(self, publicKey, privateKey, userId):
         super().__init__(publicKey, userId)
 
@@ -74,7 +77,7 @@ class PrivateKey(Key):
         pass
 
 
-class PublicKey(Key):
+class PublicKeyRow(KeyRow):
     def __init__(self, publicKey, ownerTrust, userId, signatureTrust):
         super().__init__(publicKey, userId)
 
@@ -91,5 +94,3 @@ class PublicKey(Key):
         self.keyLegitimacy = 0
         if self.keyLegitimacy > 100:
             self.keyLegitimacy = 100
-
-
