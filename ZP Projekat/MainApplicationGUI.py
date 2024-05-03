@@ -62,6 +62,13 @@ class MainApplicationGUI:
         self.privateKeyRingTable.heading("Encrypted Private Key", text="Encrypted Private Key")
         self.privateKeyRingTable.heading("User ID", text="User ID")
 
+        self.privateKeyRingTable.column("#0", width=50, anchor="center")
+        self.privateKeyRingTable.column("Timestamp", width=150, anchor="center")
+        self.privateKeyRingTable.column("Key ID", width=150, anchor="center")
+        self.privateKeyRingTable.column("Public Key", width=100, anchor="center")
+        self.privateKeyRingTable.column("Encrypted Private Key", width=250, anchor="center")
+        self.privateKeyRingTable.column("User ID", width=150, anchor="center")
+
         # Pack the first Treeview widget
         self.privateKeyRingTable.pack(expand=True, fill="both")
 
@@ -86,15 +93,15 @@ class MainApplicationGUI:
         self.publicKeyRingTable.heading("Signatures", text="Signatures")
         self.publicKeyRingTable.heading("Signature Trusts", text="Signature Trusts")
 
-        self.publicKeyRingTable.column("#0", width=50)
-        self.publicKeyRingTable.column("Timestamp", width=150)
-        self.publicKeyRingTable.column("Key ID", width=150)
-        self.publicKeyRingTable.column("Public Key", width=100)
-        self.publicKeyRingTable.column("Owner Trust", width=100)
-        self.publicKeyRingTable.column("User ID", width=150)
-        self.publicKeyRingTable.column("Key Legitimacy", width=100)
-        self.publicKeyRingTable.column("Signatures", width=150)
-        self.publicKeyRingTable.column("Signature Trusts", width=150)
+        self.publicKeyRingTable.column("#0", width=50, anchor="center")
+        self.publicKeyRingTable.column("Timestamp", width=150, anchor="center")
+        self.publicKeyRingTable.column("Key ID", width=150, anchor="center")
+        self.publicKeyRingTable.column("Public Key", width=100, anchor="center")
+        self.publicKeyRingTable.column("Owner Trust", width=100, anchor="center")
+        self.publicKeyRingTable.column("User ID", width=150, anchor="center")
+        self.publicKeyRingTable.column("Key Legitimacy", width=100, anchor="center")
+        self.publicKeyRingTable.column("Signatures", width=150, anchor="center")
+        self.publicKeyRingTable.column("Signature Trusts", width=150, anchor="center")
 
 
         # Pack the second Treeview widget
