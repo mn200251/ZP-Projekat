@@ -153,10 +153,17 @@ class PublicKeyRow(KeyRow):
         self.signatureTrust = signatureTrust
 
         # get all signature values and put them in self.signatures
-        self.signatures = []
+        self.signatures = ""
         self.keyLegitimacy = 0
-        for signature in self.signatureTrust:
-            self.keyLegitimacy += signature
+
+        signatureIterate = self.signatureTrust.split(" ")
+        for signature in signatureIterate:
+            pass
+            # find the appropriate row
+
+            # get the OwnerTrust value and add it to signatures
+
+            # self.keyLegitimacy += target.ownerTrust
 
         # calculate key legitimacy value (0-100), 100 - trust
         self.keyLegitimacy = 0

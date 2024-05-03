@@ -1,5 +1,7 @@
 import hashlib
 import os
+import secrets
+import string
 import tkinter as tk
 from tkinter import messagebox
 
@@ -75,16 +77,36 @@ class KeyGenerationGUI:
         # Get the public key
         publicKey = privateKey.public_key()
 
+        # for testing purposes
+        self.createPublicKeyPem(publicKey)
+
         privateKeyRing.addKey(publicKey=publicKey, privateKey=privateKey, userId=email, passcode=passcode)
 
         # Show success message
         messagebox.showinfo("Success", "RSA Key pair generated successfully")
 
         self.parentWindow.refreshRings(self.parentWindow)
-        self.close_window()
+        self.closeWindow()
 
-    def close_window(self):
+    def closeWindow(self):
         self.root.destroy()
+
+    @staticmethod
+    def createPublicKeyPem(publicKey):
+        # Serialize the public key to PEM format
+        pem_data = publicKey.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+
+        characters = string.ascii_letters + string.digits
+
+        # Generate a random string of specified length
+        random_string = ''.join(secrets.choice(characters) for _ in range(8))
+
+        path = "./PublicKeys/" + random_string + ".pem"
+        with open(path, "wb") as f:
+            f.write(pem_data)
 
 
 class ApplicationGUI:

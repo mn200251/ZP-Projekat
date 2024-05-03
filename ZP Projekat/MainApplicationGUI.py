@@ -2,9 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 
 from KeyGenerationGUI import KeyGenerationGUI, privateKeyRing, publicKeyRing
+from KeyImportGUI import KeyImportGUI
+from KeyExportGUI import KeyExportGUI
 
-privateKeyRingTable = 0
-publicKeyRingTable = 0
+
 
 
 class MainApplicationGUI:
@@ -14,7 +15,7 @@ class MainApplicationGUI:
 
         self.root = root
         self.root.title("ZP Projekat")
-        self.root.geometry("1200x800")
+        self.root.geometry("1400x800")
 
         # Create a frame for the buttons
         self.button_frame = tk.Frame(root)
@@ -85,6 +86,17 @@ class MainApplicationGUI:
         self.publicKeyRingTable.heading("Signatures", text="Signatures")
         self.publicKeyRingTable.heading("Signature Trusts", text="Signature Trusts")
 
+        self.publicKeyRingTable.column("#0", width=50)
+        self.publicKeyRingTable.column("Timestamp", width=150)
+        self.publicKeyRingTable.column("Key ID", width=150)
+        self.publicKeyRingTable.column("Public Key", width=100)
+        self.publicKeyRingTable.column("Owner Trust", width=100)
+        self.publicKeyRingTable.column("User ID", width=150)
+        self.publicKeyRingTable.column("Key Legitimacy", width=100)
+        self.publicKeyRingTable.column("Signatures", width=150)
+        self.publicKeyRingTable.column("Signature Trusts", width=150)
+
+
         # Pack the second Treeview widget
         self.publicKeyRingTable.pack(expand=True, fill="both")
 
@@ -106,7 +118,14 @@ class MainApplicationGUI:
 
 
     def refreshPublicKeyRing(self):
-        pass
+        self.publicKeyRingTable.delete(*self.publicKeyRingTable.get_children())
+
+        index = 0
+        for row in publicKeyRing.getAllKeys():
+            self.publicKeyRingTable.insert("", "end", text=str(index), values=(
+            row.timestamp, row.keyId, row.publicKey.public_numbers().n, row.ownerTrust, row.userId, row.keyLegitimacy, row.signatures, row.signatureTrust))
+
+            index += 1
 
     def generate_keys(self):
         keygen_window = tk.Toplevel(self.root)
@@ -114,12 +133,14 @@ class MainApplicationGUI:
         keygen_app = KeyGenerationGUI(keygen_window, self)
 
     def import_key(self):
-        # Implement the logic for importing keys
-        pass
+        importWindow = tk.Toplevel(self.root)
+        importWindow.grab_set()  # prevents from focusing on main window when this one is active
+        publicKeyImporter = KeyImportGUI(importWindow, self)
 
     def export_key(self):
-        # Implement the logic for exporting keys
-        pass
+        exportWindow = tk.Toplevel(self.root)
+        exportWindow.grab_set()  # prevents from focusing on main window when this one is active
+        publicKeyExporter = KeyExportGUI(exportWindow, self)
 
     def send_message(self):
         # Implement the logic for sending a message
