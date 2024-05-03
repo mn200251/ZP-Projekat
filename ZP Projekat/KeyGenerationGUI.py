@@ -1,12 +1,19 @@
 import hashlib
+import os
 import tkinter as tk
 from tkinter import messagebox
+
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization, padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
 # from main import privateKeyRing, publicKeyRing
 from KeyRing import *
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 privateKeyRing = PrivateKeyRing()
 publicKeyRing = PublicKeyRing()
+
 
 class KeyGenerationGUI:
     def __init__(self, root, parentWindow):
@@ -48,7 +55,6 @@ class KeyGenerationGUI:
         self.password_entry.pack(pady=5)
         self.generate_button.pack(pady=10)
 
-
     def generate_key_pair(self):
         # Get user inputs
         name = self.name_entry.get()  # sta ce nam ovo ???
@@ -69,15 +75,7 @@ class KeyGenerationGUI:
         # Get the public key
         publicKey = privateKey.public_key()
 
-        # hash the passcode
-        value = passcode.encode()
-        sha1_hash = hashlib.sha1()
-        sha1_hash.update(value)
-        hashed_value = sha1_hash.hexdigest()
-
-        # encrypt the private key with the hashed value
-
-        privateKeyRing.addKey(publicKey=publicKey, privateKey=privateKey, userId=email)
+        privateKeyRing.addKey(publicKey=publicKey, privateKey=privateKey, userId=email, passcode=passcode)
 
         # Show success message
         messagebox.showinfo("Success", "RSA Key pair generated successfully")
