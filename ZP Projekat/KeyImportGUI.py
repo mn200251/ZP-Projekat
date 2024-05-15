@@ -37,7 +37,7 @@ class KeyImportGUI:
         self.user_id_entry = ttk.Entry(self.root, width=40)
         self.user_id_entry.pack(pady=5)
 
-        ttk.Label(self.root, text="Signature Trust(s):").pack(pady=5)
+        ttk.Label(self.root, text="Signature Trusts (optional):").pack(pady=5)
         self.signature_trusts_entry = ttk.Entry(self.root, width=40)
         self.signature_trusts_entry.pack(pady=5)
 
@@ -53,9 +53,21 @@ class KeyImportGUI:
             messagebox.showerror("Error", "Please select a public key file.")
             return
 
-        self.owner_trust = self.owner_trust_entry.get()
+        self.owner_trust = int(self.owner_trust_entry.get())
         self.user_id = self.user_id_entry.get()
         self.signature_trusts = self.signature_trusts_entry.get()
+
+        if self.owner_trust is None or self.user_id is None:
+            messagebox.showerror("Error", "Please fill in all fields!")
+
+        if self.owner_trust == "" or self.user_id == "":
+            messagebox.showerror("Error", "Please fill in all required fields!")
+
+        if type(self.owner_trust) is not int:
+            messagebox.showerror("Error", "Owner Trust must be a number!")
+
+        # check if signatures are valid
+
 
         # Read the public key from the selected file
         with open(self.file_path, "rb") as key_file:

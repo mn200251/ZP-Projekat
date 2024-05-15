@@ -6,8 +6,6 @@ from KeyImportGUI import KeyImportGUI
 from KeyExportGUI import KeyExportGUI
 
 
-
-
 class MainApplicationGUI:
     def __init__(self, root):
         self.buttonWidth = 20
@@ -103,6 +101,9 @@ class MainApplicationGUI:
         self.publicKeyRingTable.column("Signatures", width=150, anchor="center")
         self.publicKeyRingTable.column("Signature Trusts", width=150, anchor="center")
 
+        # tags for key legitimacy column
+        self.publicKeyRingTable.tag_configure('green', background='green')
+        self.publicKeyRingTable.tag_configure('red', background='red')
 
         # Pack the second Treeview widget
         self.publicKeyRingTable.pack(expand=True, fill="both")
@@ -131,6 +132,16 @@ class MainApplicationGUI:
         for row in publicKeyRing.getAllKeys():
             self.publicKeyRingTable.insert("", "end", text=str(index), values=(
             row.timestamp, row.keyId, row.publicKey.public_numbers().n, row.ownerTrust, row.userId, row.keyLegitimacy, row.signatures, row.signatureTrust))
+
+            # tag = "red"
+            # if row.keyLegitimacy == 100:
+            #     tag = "green"
+            #
+            # # self.publicKeyRingTable.item(self.publicKeyRingTable.get_children()[-1], tags=(tag,))
+            #
+            # index = self.publicKeyRingTable.index(-1)
+            # self.publicKeyRingTable.tag_configure(tag, background='green' if row.keyLegitimacy == 100 else 'red')
+            # self.publicKeyRingTable.item(index, tags=(tag,))
 
             index += 1
 

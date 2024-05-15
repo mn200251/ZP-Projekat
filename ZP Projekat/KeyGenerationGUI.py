@@ -13,8 +13,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from KeyRing import *
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-privateKeyRing = PrivateKeyRing()
-publicKeyRing = PublicKeyRing()
+
 
 
 class KeyGenerationGUI:

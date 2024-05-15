@@ -2,7 +2,6 @@ import datetime
 import hashlib
 import os
 
-
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding, serialization
 from cryptography.hazmat.primitives.ciphers import modes, algorithms, Cipher
@@ -21,6 +20,13 @@ class KeyRing:
                 return key
 
         # key not found
+        return -1
+
+    def getKeyByUserId(self, userId):
+        for key in self.keys:
+            if key.userId == userId:
+                return key
+
         return -1
 
     def removeKey(self, keyId):
@@ -118,7 +124,6 @@ class PrivateKeyRow(KeyRow):
 
         return iv + ciphertext
 
-
     def decrypt(self, passcode):
         hashKey = self.hashPasscode(passcode)
         iv_bytes = self.encryptedPrivateKey[:8]
@@ -149,23 +154,41 @@ class PublicKeyRow(KeyRow):
     def __init__(self, publicKey, ownerTrust, userId, signatureTrust):
         super().__init__(publicKey, userId)
 
-        self.ownerTrust = ownerTrust
+        self.ownerTrust = int(ownerTrust)
         self.signatureTrust = signatureTrust
 
         # get all signature values and put them in self.signatures
         self.signatures = ""
         self.keyLegitimacy = 0
 
-        signatureIterate = self.signatureTrust.split(" ")
+        currLegitimacy = 0
+        signatureIterate = self.signatureTrust.split(",")
+
         for signature in signatureIterate:
-            pass
-            # find the appropriate row
+            key = privateKeyRing.getKeyByUserId(signature)
+            if key == -1:  # key not found in private keyring
+                key = publicKeyRing.getKeyByUserId(signature)
 
-            # get the OwnerTrust value and add it to signatures
+                if key == -1:  # error - user does not exist!
+                    print("key with id:" + signature + " not found!")
+                    continue
 
-            # self.keyLegitimacy += target.ownerTrust
+                # key found in public keyring
 
-        # calculate key legitimacy value (0-100), 100 - trust
-        self.keyLegitimacy = 0
+                self.signatures += str(key.ownerTrust) + " "
+                currLegitimacy += key.ownerTrust
+
+                continue
+
+            # key found in private keyring
+
+            self.signatures += str(100) + " "
+            currLegitimacy += 100
+
+        self.keyLegitimacy = currLegitimacy
         if self.keyLegitimacy > 100:
             self.keyLegitimacy = 100
+
+
+privateKeyRing = PrivateKeyRing()
+publicKeyRing = PublicKeyRing()
