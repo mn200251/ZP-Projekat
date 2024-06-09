@@ -4,6 +4,8 @@ from tkinter import ttk
 from KeyGenerationGUI import KeyGenerationGUI, privateKeyRing, publicKeyRing
 from KeyImportGUI import KeyImportGUI
 from KeyExportGUI import KeyExportGUI
+from SendMessageGUI import SendMessageGUI
+import ReceiveMessageGUI
 
 
 class MainApplicationGUI:
@@ -161,8 +163,9 @@ class MainApplicationGUI:
         publicKeyExporter = KeyExportGUI(exportWindow, self)
 
     def send_message(self):
-        # Implement the logic for sending a message
-        pass
+        exportWindow = tk.Toplevel(self.root)
+        exportWindow.grab_set()  # prevents from focusing on main window when this one is active
+        publicKeyExporter = SendMessageGUI(exportWindow, self)
 
     def receive_message(self):
         # Implement the logic for receiving a message
