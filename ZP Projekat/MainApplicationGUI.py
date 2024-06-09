@@ -110,7 +110,8 @@ class MainApplicationGUI:
         # Pack the second Treeview widget
         self.publicKeyRingTable.pack(expand=True, fill="both")
 
-
+    def getPrivateKey(self, index):
+        return privateKeyRing.getKey(index)
 
     @staticmethod
     def refreshRings(self):
