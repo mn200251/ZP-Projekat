@@ -110,8 +110,11 @@ class MainApplicationGUI:
         # Pack the second Treeview widget
         self.publicKeyRingTable.pack(expand=True, fill="both")
 
-    def getPrivateKey(self, index):
-        return privateKeyRing.getKey(index)
+    def getPrivateKey(self, userId):
+        return privateKeyRing.getKeyByUserId(userId)
+    
+    def getPublicKey(self, userId):
+        return publicKeyRing.getKeyByUserId(userId)
 
     @staticmethod
     def refreshRings(self):

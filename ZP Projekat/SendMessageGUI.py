@@ -1,18 +1,21 @@
+import base64
 import tkinter as tk
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
-import zipfile
+import gzip
 import os
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 class SendMessageGUI:
     def __init__(self, root, parentWindow):
         self.parentWindow = parentWindow
         self.root = root
         self.root.title("Send a message")
-        self.root.geometry("300x500")
+        self.root.geometry("300x550")
 
         self.text_label = tk.Label(root, text="Text message:")
         self.text_entry = tk.Entry(root)
@@ -28,10 +31,13 @@ class SendMessageGUI:
         self.compress_checkbox = tk.Checkbutton(root, text="Compress message", variable=self.compress_checkbox_var)
         self.radix64_checkbox = tk.Checkbutton(root, text="Radix64 encode message", variable=self.radix64_checkbox_var)
         
-        self.priv_key_label = tk.Label(root, text="Private Key index:")
+        self.priv_key_label = tk.Label(root, text="Private Key userId:")
         self.priv_key_entry = tk.Entry(root)
 
-        self.publ_key_label = tk.Label(root, text="Public Key index:")
+        self.priv_key_pass = tk.Label(root, text="Private Key decryption password:")
+        self.priv_key_pass_entry = tk.Entry(root, show="*")
+
+        self.publ_key_label = tk.Label(root, text="Public Key userId:")
         self.publ_key_entry = tk.Entry(root)
 
         self.algorithm_label = tk.Label(root, text="Encryption algorithm:")
@@ -56,6 +62,8 @@ class SendMessageGUI:
         self.radix64_checkbox.pack()
         self.priv_key_label.pack(pady=5)
         self.priv_key_entry.pack(pady=5)
+        self.priv_key_pass.pack(pady=5)
+        self.priv_key_pass_entry.pack(pady=5)
         self.publ_key_label.pack(pady=5)
         self.publ_key_entry.pack(pady=5)
         self.algorithm_label.pack(pady=5)
@@ -72,34 +80,35 @@ class SendMessageGUI:
         authentication = self.authentication_checkbox_var.get()
         compress = self.compress_checkbox_var.get()
         radix64 = self.radix64_checkbox_var.get()
-        priv_key_index = self.priv_key_entry.get()
-        publ_key_index = self.publ_key_entry.get()
+        priv_key_user_id = self.priv_key_entry.get()
+        priv_key_pass = self.priv_key_pass_entry.get()
+        publ_key_user_id = self.publ_key_entry.get()
         algorithm = self.algorithm_var.get()
         destination_path = self.destination_entry.get()
 
-        if text is None or (encryption is None and publ_key_index is None) or (authentication is None and priv_key_index is None) or destination_path is None:
+        if text is None or (encryption is None and publ_key_user_id is None) or (authentication is None and priv_key_user_id is None) or destination_path is None:
             tk.messagebox.showinfo("Error", "Please enter all required information")
             return
         
         # Load private key
         if authentication:
-            private_key = self.parentWindow.getPrivateKey(priv_key_index)
+            private_key = self.parentWindow.getPrivateKey(priv_key_user_id).decrypt(priv_key_pass)
             
             # Hash the message with SHA-1
             digest = hashes.Hash(hashes.SHA1(), backend=default_backend())
             digest.update(text.encode())
             hashed_message = digest.finalize()
 
-            # Encrypt the hashed message with the private key
+            # Encrypt the hashed message with the private key using rsa algorithm
             signature = private_key.sign(hashed_message, padding.PSS(mgf=padding.MGF1(hashes.SHA1()), salt_length=padding.PSS.MAX_LENGTH), hashes.SHA1())
 
             # Append the signature to the message
-            text += signature
+            text = text.encode() + signature
             print(text)
 
         if compress:
             # Compress the message
-            compressed_message = zipfile.compress(text.encode())
+            compressed_message = gzip.compress(text)
             text = compressed_message
 
         
@@ -114,7 +123,10 @@ class SendMessageGUI:
             elif algorithm == "AES128":
                 cipher = Cipher(algorithms.AES(session_key), modes.CBC(os.urandom(16)), backend=default_backend())
 
-            public_key = self.parentWindow.getPublicKey(publ_key_index)
+            encryptor = cipher.encryptor()
+            text = encryptor.update(text) + encryptor.finalize()
+
+            public_key = self.parentWindow.getPublicKey(publ_key_user_id).publicKey
 
             # Encrypt the session key with the public key
             encrypted_session_key = public_key.encrypt(session_key, padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA1()), algorithm=hashes.SHA1(), label=None))
@@ -124,7 +136,7 @@ class SendMessageGUI:
 
         if radix64:
             # Encode the message with radix64
-            text = text.encode("ascii").encode("base64")
+            text = base64.b64encode(text).decode('ascii')
 
         with open(destination_path, "w") as file:
             file.write(text)
