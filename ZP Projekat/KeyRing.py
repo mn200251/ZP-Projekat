@@ -380,16 +380,21 @@ class PublicKeyRow(KeyRow):
         signatureIterate = self.signatureTrust.split(",")
 
         for signature in signatureIterate:
+            signature = signature.strip(' ')
+
+            if signature == "":
+                continue
+
             key = privateKeyRing.getKeyByUserId(signature)
             if key == -1:  # key not found in private keyring
                 key = publicKeyRing.getKeyByUserId(signature)
 
                 if key == -1:  # error - user does not exist!
-                    print("key with id:" + signature + " not found!")
+                    self.signatures += "? "
+                    print("Signature with id:" + signature + " not found!")
                     continue
 
                 # key found in public keyring
-
                 self.signatures += str(key.ownerTrust) + " "
                 currLegitimacy += key.ownerTrust
 
