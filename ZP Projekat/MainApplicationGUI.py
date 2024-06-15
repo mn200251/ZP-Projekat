@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from KeyGenerationGUI import KeyGenerationGUI, privateKeyRing, publicKeyRing
+from KeyGenerationGUI import KeyGenerationGUI, privateKeyRing, publicKeyRing, privateKeyRingName, publicKeyRingName
 from KeyImportGUI import KeyImportGUI
 from KeyExportGUI import KeyExportGUI
 from SendMessageGUI import SendMessageGUI
@@ -130,6 +130,8 @@ class MainApplicationGUI:
 
             index += 1
 
+        privateKeyRing.save2Disk(privateKeyRingName)
+
 
     def refreshPublicKeyRing(self):
         self.publicKeyRingTable.delete(*self.publicKeyRingTable.get_children())
@@ -150,6 +152,8 @@ class MainApplicationGUI:
             # self.publicKeyRingTable.item(index, tags=(tag,))
 
             index += 1
+
+        publicKeyRing.save2Disk(publicKeyRingName)
 
     def generate_keys(self):
         keygen_window = tk.Toplevel(self.root)

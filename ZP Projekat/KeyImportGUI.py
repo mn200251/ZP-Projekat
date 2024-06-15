@@ -87,7 +87,7 @@ class KeyImportGUI:
         # self.signature_trusts = ""
         publicKeyRing.addKey(public_key, self.owner_trust, self.user_id, self.signature_trusts)
 
-        self.parentWindow.refreshRings(self.parentWindow)
+        self.parentWindow.refreshRings()
         self.closeWindow()
 
     def closeWindow(self):

@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter import ttk, messagebox
 from tkinter import filedialog
@@ -82,7 +83,12 @@ class KeyExportGUI:
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
 
-        path = "./ExportedKeys/" + output_file + ".pem"
+
+        currentDirectory = os.getcwd()
+
+        path = os.path.join(currentDirectory, "PublicKeys", output_file + ".pem")
+
+        # path = "./ExportedKeys/" + output_file + ".pem"
 
         # Write the PEM-formatted bytes to a file
         with open(path, "wb") as f:

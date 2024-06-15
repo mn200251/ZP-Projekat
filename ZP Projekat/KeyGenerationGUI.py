@@ -84,7 +84,7 @@ class KeyGenerationGUI:
         # Show success message
         messagebox.showinfo("Success", "RSA Key pair generated successfully")
 
-        self.parentWindow.refreshRings(self.parentWindow)
+        self.parentWindow.refreshRings()
         self.closeWindow()
 
     def closeWindow(self):
@@ -103,7 +103,12 @@ class KeyGenerationGUI:
         # Generate a random string of specified length
         random_string = ''.join(secrets.choice(characters) for _ in range(8))
 
-        path = "./PublicKeys/" + random_string + ".pem"
+        currentDirectory = os.getcwd()
+
+        # path = "./PublicKeys/" + random_string + ".pem"
+
+        path = os.path.join(currentDirectory, "PublicKeys", random_string + ".pem")
+
         with open(path, "wb") as f:
             f.write(pem_data)
 
