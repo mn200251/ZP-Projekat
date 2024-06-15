@@ -5,6 +5,7 @@ import os
 import pickle
 import uuid
 from abc import abstractmethod
+from tkinter import messagebox
 from typing import List
 
 from cryptography.hazmat.backends import default_backend
@@ -387,7 +388,8 @@ class PrivateKeyRow(KeyRow):
             return privateKey
 
         except:
-            print("Incorrect passcode!")
+            messagebox.showerror("Error", "Incorrect passcode provided!")
+            # print("Incorrect passcode!")
             return -1
 
 
@@ -405,6 +407,19 @@ class PublicKeyRow(KeyRow):
             self.keyLegitimacy = keyLegitimacy
             self.signatures = signatures
             return
+
+        # check if there are duplicate signatureTrust values inserted
+        tempSignaturesList = self.signatureTrust.split(", ")
+        tempSignaturesList = [x.strip(' ') for x in tempSignaturesList]
+        if len(tempSignaturesList) != len(set(tempSignaturesList)):
+            # this is called when there are atleast 2 signatures, so it wont break
+            self.signatureTrust = ""
+            for signature in set(tempSignaturesList):
+                self.signatureTrust += signature + ", "
+            self.signatureTrust = self.signatureTrust[:-2]
+
+            messagebox.showwarning("Warning", "Removing duplicate signatures!")
+
 
         # get all signature values and put them in self.signatures
         self.signatures = ""
@@ -425,6 +440,7 @@ class PublicKeyRow(KeyRow):
 
                 if key == -1:  # error - user does not exist!
                     self.signatures += "? "
+                    # messagebox.showwarning("Warning", "Signature with id: " + signature + " not found!")
                     print("Signature with id:" + signature + " not found!")
                     continue
 
