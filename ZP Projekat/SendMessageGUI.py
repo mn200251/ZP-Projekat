@@ -1,12 +1,14 @@
 import base64
+import json
 import tkinter as tk
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
-import gzip
 import os
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+import utils
 
 from cryptography.hazmat.primitives.asymmetric import rsa
 
@@ -90,25 +92,41 @@ class SendMessageGUI:
             tk.messagebox.showinfo("Error", "Please enter all required information")
             return
         
+        text = text.encode()
+        
         # Load private key
         if authentication:
             private_key = self.parentWindow.getPrivateKey(priv_key_user_id).decrypt(priv_key_pass)
+            public_key_id = self.parentWindow.getPublicKey(publ_key_user_id).keyId
             
             # Hash the message with SHA-1
             digest = hashes.Hash(hashes.SHA1(), backend=default_backend())
-            digest.update(text.encode())
+            digest.update(text)
             hashed_message = digest.finalize()
 
             # Encrypt the hashed message with the private key using rsa algorithm
             signature = private_key.sign(hashed_message, padding.PSS(mgf=padding.MGF1(hashes.SHA1()), salt_length=padding.PSS.MAX_LENGTH), hashes.SHA1())
 
             # Append the signature to the message
-            text = text.encode() + signature
+
+            appended_data = {
+                "authenticated" : "true",
+                "signature" : signature,
+                "public_key_id" : public_key_id
+            }
+
             print(text)
+        else:
+            appended_data = {
+                "authenticated" : "false"
+            }
+
+        appended_data = json.dumps(appended_data).encode()
+        text += "appended_data" + appended_data
 
         if compress:
             # Compress the message
-            compressed_message = gzip.compress(text)
+            compressed_message = utils.zip_data(text)
             text = compressed_message
 
         
@@ -127,16 +145,30 @@ class SendMessageGUI:
             text = encryptor.update(text) + encryptor.finalize()
 
             public_key = self.parentWindow.getPublicKey(publ_key_user_id).publicKey
+            public_key_id = self.parentWindow.getPublicKey(publ_key_user_id).keyId
 
             # Encrypt the session key with the public key
             encrypted_session_key = public_key.encrypt(session_key, padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA1()), algorithm=hashes.SHA1(), label=None))
 
             # Append the encrypted session key to the message
-            text += encrypted_session_key
+
+            appended_data = {
+                "encrypted" : "true",
+                "algorithm" : algorithm,
+                "public_key_id" : public_key_id,
+                "encrypted_session_key" : encrypted_session_key
+            }
+        else:  
+            appended_data = {
+                "encrypted" : "false"
+            }
+
+        appended_data = json.dumps(appended_data).encode()
+        text += "appended_data" + appended_data
 
         if radix64:
             # Encode the message with radix64
-            text = base64.b64encode(text).decode('ascii')
+            text = utils.encode_radix64(text)
 
         with open(destination_path, "w") as file:
             file.write(text)

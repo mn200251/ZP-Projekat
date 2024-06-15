@@ -5,7 +5,7 @@ from KeyGenerationGUI import KeyGenerationGUI, privateKeyRing, publicKeyRing
 from KeyImportGUI import KeyImportGUI
 from KeyExportGUI import KeyExportGUI
 from SendMessageGUI import SendMessageGUI
-import ReceiveMessageGUI
+from ReceiveMessageGUI import ReceiveMessageGUI
 
 
 class MainApplicationGUI:
@@ -172,5 +172,7 @@ class MainApplicationGUI:
         publicKeyExporter = SendMessageGUI(exportWindow, self)
 
     def receive_message(self):
-        # Implement the logic for receiving a message
-        pass
+        exportWindow = tk.Toplevel(self.root)
+        exportWindow.grab_set()  # prevents from focusing on main window when this one is active
+        publicKeyExporter = ReceiveMessageGUI(exportWindow, self)
+        
