@@ -59,12 +59,15 @@ class KeyImportGUI:
 
         if self.owner_trust is None or self.user_id is None:
             messagebox.showerror("Error", "Please fill in all fields!")
+            return
 
         if self.owner_trust == "" or self.user_id == "":
             messagebox.showerror("Error", "Please fill in all required fields!")
+            return
 
         if type(self.owner_trust) is not int:
             messagebox.showerror("Error", "Owner Trust must be a number!")
+            return
 
         # check if signatures are valid
 
@@ -85,6 +88,11 @@ class KeyImportGUI:
         # self.owner_trust = ""
         # self.user_id = ""
         # self.signature_trusts = ""
+
+        if publicKeyRing.getKeyByUserId(self.user_id) != -1 or privateKeyRing.getKeyByUserId(self.user_id) != -1:
+            messagebox.showerror("Error", "That user id already exists!")
+            return
+
         publicKeyRing.addKey(public_key, self.owner_trust, self.user_id, self.signature_trusts)
 
         self.parentWindow.refreshRings()

@@ -72,7 +72,7 @@ class KeyExportGUI:
 
 
         KeyExportGUI.exportKey2PEM(targetRow.publicKey, self.name.get())
-        messagebox.showerror("Success", "Public key exported successfully!")
+        messagebox.showinfo("Success", "Public key exported successfully!")
         self.closeWindow()
 
     @staticmethod
