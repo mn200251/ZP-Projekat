@@ -166,6 +166,8 @@ class PublicKeyRing(KeyRing):
         except FileNotFoundError:
             print(f"KeyRing not found on disk for user. Creating a new one...")
             return None
+        except:
+            return None
 
 
 class PrivateKeyRing(KeyRing):
@@ -265,6 +267,8 @@ class PrivateKeyRing(KeyRing):
         except FileNotFoundError:
             print(f"KeyRing not found on disk for user. Creating a new one...")
             return None
+        except:
+            return None
 
 
 class KeyRow:
@@ -284,6 +288,9 @@ class PrivateKeyRow(KeyRow):
 
         print("Before encryption: n = " + str(publicKey.public_numbers().n))
 
+        # check if new user id was already mentioned somewhere before, find the ? and replace with owner trust value
+        # recalculate keyLegitimacy
+        # fuj kod
         if privateKey and passcode:
             # encrypt private key
             self.encryptedPrivateKey = self.encrypt(privateKey, passcode)
@@ -292,6 +299,35 @@ class PrivateKeyRow(KeyRow):
             self.encryptedPrivateKey = encryptedPrivateKey
         else:
             raise ValueError("Invalid arguments provided for KeyRow initialization")
+
+        for row in publicKeyRing.getAllKeys():
+            for i in range(0, len(row.signatureTrust.split(", "))):
+                signature = row.signatureTrust.split(", ")[i]
+                signature = signature.strip(' ')
+
+                if signature != userId:
+                    continue
+
+                # find the ? in string and change it to self.ownerTrust value
+                newSignatureString = ""
+                newSignatures = 0
+                for j in range(0, len(row.signatures.split(" ")) - 1):
+                    # print(row.signatures.split(" ")[j])
+                    if row.signatures.split(" ")[j] == "":
+                        continue
+
+                    if i == j and row.signatures.split(" ")[i] == "?":
+                        newSignatureString += str(100) + " "
+                        newSignatures += 100
+                    elif row.signatures.split(" ")[j] == "?":
+                        newSignatureString += "? "
+                        continue
+                    else:
+                        newSignatureString += row.signatures.split(" ")[j] + " "
+                        newSignatures += int(row.signatures.split(" ")[j])
+
+                row.signatures = newSignatureString
+                row.keyLegitimacy = min(newSignatures, 100)
 
     def hashPasscode(self, passcode):
         value = passcode.encode()
@@ -356,8 +392,6 @@ class PrivateKeyRow(KeyRow):
 
 
 class PublicKeyRow(KeyRow):
-    # PublicKeyRow(timestamp=timestamp, publicKey=publicKey, ownerTrust=ownerTrust, userId=userId, keyLegitimacy=keyLegitimacy,
-    #                               signatures=signatures, signatureTrust=signatureTrust))
     def __init__(self, publicKey, ownerTrust, userId, signatureTrust, signatures=None, timestamp=None, keyLegitimacy=None):
         super().__init__(publicKey, userId)
 
@@ -408,6 +442,41 @@ class PublicKeyRow(KeyRow):
         self.keyLegitimacy = currLegitimacy
         if self.keyLegitimacy > 100:
             self.keyLegitimacy = 100
+
+
+        # check if new user id was already mentioned somewhere before, find the ? and replace with owner trust value
+        # recalculate keyLegitimacy
+        # fuj kod
+        for row in publicKeyRing.getAllKeys():
+            for i in range(0, len(row.signatureTrust.split(", "))):
+                signature = row.signatureTrust.split(", ")[i]
+                signature = signature.strip(' ')
+
+                if signature != userId:
+                    continue
+
+                # find the ? in string and change it to self.ownerTrust value
+                newSignatureString = ""
+                newSignatures = 0
+                for j in range(0, len(row.signatures.split(" ")) - 1):
+                    # print(row.signatures.split(" ")[j])
+                    if row.signatures.split(" ")[j] == "":
+                        continue
+
+                    if i == j and row.signatures.split(" ")[i] == "?":
+                        newSignatureString += str(self.ownerTrust) + " "
+                        newSignatures += self.ownerTrust
+                    elif row.signatures.split(" ")[j] == "?":
+                        newSignatureString += "? "
+                        continue
+                    else:
+                        newSignatureString += row.signatures.split(" ")[j] + " "
+                        newSignatures += int(row.signatures.split(" ")[j])
+
+                row.signatures = newSignatureString
+                row.keyLegitimacy = min(newSignatures, 100)
+
+
 
 
 privateKeyRing = PrivateKeyRing()
