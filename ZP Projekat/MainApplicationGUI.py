@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from KeyGenerationGUI import KeyGenerationGUI, privateKeyRing, publicKeyRing
+from KeyGenerationGUI import KeyGenerationGUI, privateKeyRing, publicKeyRing, privateKeyRingName, publicKeyRingName
 from KeyImportGUI import KeyImportGUI
 from KeyExportGUI import KeyExportGUI
 
@@ -109,8 +109,6 @@ class MainApplicationGUI:
         self.publicKeyRingTable.pack(expand=True, fill="both")
 
 
-
-    @staticmethod
     def refreshRings(self):
         self.refreshPrivateKeyRing()
         self.refreshPublicKeyRing()
@@ -123,6 +121,8 @@ class MainApplicationGUI:
             self.privateKeyRingTable.insert("", "end", text=str(index), values=(row.timestamp, row.keyId, row.publicKey.public_numbers().n, row.encryptedPrivateKey, row.userId))
 
             index += 1
+
+        privateKeyRing.save2Disk(privateKeyRingName)
 
 
     def refreshPublicKeyRing(self):
@@ -144,6 +144,8 @@ class MainApplicationGUI:
             # self.publicKeyRingTable.item(index, tags=(tag,))
 
             index += 1
+
+        publicKeyRing.save2Disk(publicKeyRingName)
 
     def generate_keys(self):
         keygen_window = tk.Toplevel(self.root)

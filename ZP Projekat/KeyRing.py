@@ -1,10 +1,17 @@
-import datetime
+import base64
 import hashlib
+import json
 import os
+import pickle
+import uuid
+from abc import abstractmethod
+from typing import List
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding, serialization
 from cryptography.hazmat.primitives.ciphers import modes, algorithms, Cipher
+
+from datetime import datetime
 
 
 class KeyRing:
@@ -38,40 +45,231 @@ class KeyRing:
         # Error - key with that id not found!
         print("key with that id not found!")
 
+    @abstractmethod
+    def save2Disk(self, filename: str):
+        pass
+
+    @abstractmethod
+    def tryLoadFromDisk(self, filename: str):
+        pass
+
 
 class PublicKeyRing(KeyRing):
     def __init__(self):
         super().__init__()
 
+        self.keys: List[PublicKeyRow] = []
+
     def addKey(self, publicKey, ownerTrust, userId, signatureTrust):
         # check if key id is already in key ring
         keyId = publicKey.public_numbers().n % (2 ** 64)
         if keyId not in self.keys:
-            self.keys.append(PublicKeyRow(publicKey, ownerTrust, userId, signatureTrust))
+            self.keys.append(PublicKeyRow(publicKey=publicKey, ownerTrust=ownerTrust, userId=userId, signatureTrust=signatureTrust))
             return
 
         # Error - key with that id already exists!
         print("key with that id already exists!")
+
+    def loadKey(self, timestamp, publicKey, ownerTrust, userId, keyLegitimacy, signatures, signatureTrust):
+        # check if key id is already in key ring
+        keyId = publicKey.public_numbers().n % (2 ** 64)
+        if keyId not in self.keys:
+            self.keys.append(
+                PublicKeyRow(timestamp=timestamp, publicKey=publicKey, ownerTrust=ownerTrust, userId=userId, keyLegitimacy=keyLegitimacy,
+                              signatures=signatures, signatureTrust=signatureTrust))
+            return
+
+        # Error - key with that id already exists!
+        print("Key with that id already exists!")
+
+    def save2Disk(self, filename: str):
+        if len(self.keys) == 0:
+            return
+
+        currentDirectory = os.getcwd()
+        print(f"Current directory: {currentDirectory}")
+
+        path = os.path.join(currentDirectory, "KeyRings", filename)
+
+        directory = os.path.dirname(path)
+        if not os.path.exists(directory):
+            try:
+                os.makedirs(directory)
+                print(f"Directory created: {directory}")
+            except Exception as e:
+                print(f"Failed to create directory: {directory}")
+                print(e)
+                return
+
+        # with open(path, 'wb') as file:
+        #     pickle.dump(self, file)
+        #     print(f"KeyRing saved to: {path}")
+
+        jsonFile = {}
+
+        for keyRow in self.keys:
+            public_key_pem = keyRow.publicKey.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            )
+            jsonFile[keyRow.keyId] = {}
+
+            jsonFile[keyRow.keyId]["Timestamp"] = keyRow.timestamp.isoformat()
+            jsonFile[keyRow.keyId]["PublicKey"] = public_key_pem.decode('utf-8')
+
+            jsonFile[keyRow.keyId]["OwnerTrust"] = keyRow.ownerTrust
+            jsonFile[keyRow.keyId]["UserId"] = keyRow.userId
+            jsonFile[keyRow.keyId]["KeyLegitimacy"] = keyRow.keyLegitimacy
+            jsonFile[keyRow.keyId]["Signatures"] = keyRow.signatures
+            jsonFile[keyRow.keyId]["SignatureTrust"] = keyRow.signatureTrust
+
+            # private_key_pem = private_key.private_bytes(
+            #     encoding=serialization.Encoding.PEM,
+            #     format=serialization.PrivateFormat.TraditionalOpenSSL,
+            #     encryption_algorithm=serialization.NoEncryption()
+            # )
+
+        try:
+            with open(path, 'w') as file:
+                json.dump(jsonFile, file, indent=4)
+                print(f"KeyRing saved to: {path}")
+        except PermissionError as e:
+            print(f"Permission error while writing to file: {path}")
+            print(e)
+        except Exception as e:
+            print(f"An error occurred while writing to file: {path}")
+            print(e)
+
+    def tryLoadFromDisk(self, filename: str):
+        currentDirectory = os.getcwd()
+        # print(f"Current directory: {currentDirectory}")
+
+        path = os.path.join(currentDirectory, "KeyRings", filename)
+
+        try:
+            print(f"Loading from Disk: {path}")
+
+            with open(path, 'r') as file:
+                jsonData = json.load(file)
+
+                for keyId in jsonData:
+                    self.loadKey(
+                        timestamp=datetime.fromisoformat(jsonData[keyId]["Timestamp"]),
+                        publicKey=serialization.load_pem_public_key(jsonData[keyId]["PublicKey"].encode('utf-8')),
+                        ownerTrust=jsonData[keyId]["OwnerTrust"],
+                        userId=jsonData[keyId]["UserId"],
+                        keyLegitimacy=jsonData[keyId]["KeyLegitimacy"],
+                        signatures=jsonData[keyId]["Signatures"],
+                        signatureTrust=jsonData[keyId]["SignatureTrust"]
+                        )
+
+        except FileNotFoundError:
+            print(f"KeyRing not found on disk for user. Creating a new one...")
+            return None
 
 
 class PrivateKeyRing(KeyRing):
     def __init__(self):
         super().__init__()
 
+        self.keys: List[PrivateKeyRow] = []
+
     def addKey(self, publicKey, privateKey, userId, passcode):
         # check if key id is already in key ring
         keyId = publicKey.public_numbers().n % (2 ** 64)
         if keyId not in self.keys:
-            self.keys.append(PrivateKeyRow(publicKey, privateKey, userId, passcode))
+            self.keys.append(PrivateKeyRow(publicKey=publicKey, privateKey=privateKey, userId=userId, passcode=passcode,
+                                           timestamp=None, encryptedPrivateKey=None))
             return
 
         # Error - key with that id already exists!
-        print("key with that id already exists!")
+        print("Key with that id already exists!")
+
+    # used for leading row with encrypted private key
+    def loadKey(self, timestamp, publicKey, encryptedPrivateKey, userId):
+        # check if key id is already in key ring
+        keyId = publicKey.public_numbers().n % (2 ** 64)
+        if keyId not in self.keys:
+            self.keys.append(
+                PrivateKeyRow(publicKey=publicKey, privateKey=None, userId=userId, passcode=None, timestamp=timestamp,
+                              encryptedPrivateKey=encryptedPrivateKey))
+            return
+
+        # Error - key with that id already exists!
+        print("Key with that id already exists!")
+
+    def save2Disk(self, filename: str):
+        if len(self.keys) == 0:
+            return
+
+        currentDirectory = os.getcwd()
+        print(f"Current directory: {currentDirectory}")
+
+        path = os.path.join(currentDirectory, "KeyRings", filename)
+
+        directory = os.path.dirname(path)
+        if not os.path.exists(directory):
+            try:
+                os.makedirs(directory)
+                print(f"Directory created: {directory}")
+            except Exception as e:
+                print(f"Failed to create directory: {directory}")
+                print(e)
+                return
+
+        jsonFile = {}
+
+        for keyRow in self.keys:
+            public_key_pem = keyRow.publicKey.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            )
+
+            jsonFile[keyRow.keyId] = {}
+            jsonFile[keyRow.keyId]["Timestamp"] = keyRow.timestamp.isoformat()
+            jsonFile[keyRow.keyId]["UserId"] = keyRow.userId
+
+            jsonFile[keyRow.keyId]["PublicKey"] = public_key_pem.decode('utf-8')
+            jsonFile[keyRow.keyId]["EncryptedPrivateKey"] = base64.b64encode(keyRow.encryptedPrivateKey).decode('utf-8')
+
+        try:
+            with open(path, 'w') as file:
+                json.dump(jsonFile, file, indent=4)
+                print(f"KeyRing saved to: {path}")
+        except PermissionError as e:
+            print(f"Permission error while writing to file: {path}")
+            print(e)
+        except Exception as e:
+            print(f"An error occurred while writing to file: {path}")
+            print(e)
+
+    def tryLoadFromDisk(self, filename: str):
+        currentDirectory = os.getcwd()
+        # print(f"Current directory: {currentDirectory}")
+
+        path = os.path.join(currentDirectory, "KeyRings", filename)
+
+        try:
+            print(f"Loading from Disk: {path}")
+
+            with open(path, 'r') as file:
+                jsonData = json.load(file)
+
+                for keyId in jsonData:
+                    self.loadKey(
+                        publicKey=serialization.load_pem_public_key(jsonData[keyId]["PublicKey"].encode('utf-8')),
+                        encryptedPrivateKey=base64.b64decode(jsonData[keyId]["EncryptedPrivateKey"]),
+                        userId=jsonData[keyId]["UserId"],
+                        timestamp=datetime.fromisoformat(jsonData[keyId]["Timestamp"]))
+
+        except FileNotFoundError:
+            print(f"KeyRing not found on disk for user. Creating a new one...")
+            return None
 
 
 class KeyRow:
     def __init__(self, publicKey, userId):
-        self.timestamp = datetime.datetime.now()
+        self.timestamp = datetime.now()
         self.keyId = publicKey.public_numbers().n % (2 ** 64)
         self.publicKey = publicKey
         # print("///\n" + str(self.publicKey.public_numbers().n) + "\n" + str(self.keyId))
@@ -80,13 +278,20 @@ class KeyRow:
 
 # 1 row in PrivateKeyRing
 class PrivateKeyRow(KeyRow):
-    def __init__(self, publicKey, privateKey, userId, passcode):
+    def __init__(self, publicKey, privateKey=None, userId=None, passcode=None, timestamp=None,
+                 encryptedPrivateKey=None):
         super().__init__(publicKey, userId)
 
         print("Before encryption: n = " + str(publicKey.public_numbers().n))
 
-        # encrypt private key
-        self.encryptedPrivateKey = self.encrypt(privateKey, passcode)
+        if privateKey and passcode:
+            # encrypt private key
+            self.encryptedPrivateKey = self.encrypt(privateKey, passcode)
+        elif encryptedPrivateKey and timestamp:
+            self.timestamp = timestamp
+            self.encryptedPrivateKey = encryptedPrivateKey
+        else:
+            raise ValueError("Invalid arguments provided for KeyRow initialization")
 
     def hashPasscode(self, passcode):
         value = passcode.encode()
@@ -151,11 +356,21 @@ class PrivateKeyRow(KeyRow):
 
 
 class PublicKeyRow(KeyRow):
-    def __init__(self, publicKey, ownerTrust, userId, signatureTrust):
+    # PublicKeyRow(timestamp=timestamp, publicKey=publicKey, ownerTrust=ownerTrust, userId=userId, keyLegitimacy=keyLegitimacy,
+    #                               signatures=signatures, signatureTrust=signatureTrust))
+    def __init__(self, publicKey, ownerTrust, userId, signatureTrust, signatures=None, timestamp=None, keyLegitimacy=None):
         super().__init__(publicKey, userId)
 
         self.ownerTrust = int(ownerTrust)
         self.signatureTrust = signatureTrust
+
+        if timestamp:
+            self.timestamp = timestamp
+
+        if signatures and keyLegitimacy:
+            self.keyLegitimacy = keyLegitimacy
+            self.signatures = signatures
+            return
 
         # get all signature values and put them in self.signatures
         self.signatures = ""
@@ -192,3 +407,6 @@ class PublicKeyRow(KeyRow):
 
 privateKeyRing = PrivateKeyRing()
 publicKeyRing = PublicKeyRing()
+
+privateKeyRingName = "PrivateKeyRing"
+publicKeyRingName = "PublicKeyRing"
