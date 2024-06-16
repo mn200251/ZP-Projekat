@@ -6,6 +6,8 @@ from PublicKeyImportGUI import PublicKeyImportGUI
 from KeyPairImportGUI import KeyPairImportGUI
 from KeyPairExportGUI import KeyPairExportGUI
 from PublicKeyExportGUI import PublicKeyExportGUI
+from SendMessageGUI import SendMessageGUI
+from ReceiveMessageGUI import ReceiveMessageGUI
 
 
 class MainApplicationGUI:
@@ -122,6 +124,17 @@ class MainApplicationGUI:
         # Pack the second Treeview widget
         self.publicKeyRingTable.pack(expand=True, fill="both")
 
+    def getPrivateKey(self, userId):
+        return privateKeyRing.getKeyByUserId(userId)
+    
+    def getPublicKey(self, userId):
+        return publicKeyRing.getKeyByUserId(userId)
+    
+    def getPublicKeyByKeyId(self, keyId):
+        return publicKeyRing.getKey(keyId)
+    
+    def getPrivateKeyByKeyId(self, keyId):
+        return privateKeyRing.getKey(keyId)
     def refreshRings(self):
         self.refreshPrivateKeyRing()
         self.refreshPublicKeyRing()
@@ -187,9 +200,12 @@ class MainApplicationGUI:
         publicKeyExporter = PublicKeyExportGUI(exportWindow, self)
 
     def send_message(self):
-        # Implement the logic for sending a message
-        pass
+        exportWindow = tk.Toplevel(self.root)
+        exportWindow.grab_set()  # prevents from focusing on main window when this one is active
+        publicKeyExporter = SendMessageGUI(exportWindow, self)
 
     def receive_message(self):
-        # Implement the logic for receiving a message
-        pass
+        exportWindow = tk.Toplevel(self.root)
+        exportWindow.grab_set()  # prevents from focusing on main window when this one is active
+        publicKeyExporter = ReceiveMessageGUI(exportWindow, self)
+        
