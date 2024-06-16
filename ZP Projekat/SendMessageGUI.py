@@ -89,9 +89,10 @@ class SendMessageGUI:
         algorithm = self.algorithm_var.get()
         destination_file = self.destination_entry.get()
 
-        # if text is None or (encryption is None and publ_key_user_id is None) or (authentication is None and priv_key_user_id is None) or destination_file is None:
+        # if text is None or (encryption is None and publ_key_user_id is None) or (authentication is None and (priv_key_user_id is None or priv_key_pass is None)) or destination_file is None:
         #     tk.messagebox.showinfo("Error", "Please enter all required information")
         #     return
+        
         text = """Things fall apart and time breaks your heart
 I wasn't there, but I know
 She was your girl, you showed her the world
@@ -101,114 +102,111 @@ Only made us closer until July
 Now I know that you love me, you don't need to remind me
 I should put it all behind me, shouldn't I?"""
 
-        encryption = False
-        authentication = True
-        compress = False
-        radix64 = False
+        # encryption = False
+        # authentication = True
+        # compress = False
+        # radix64 = False
         priv_key_user_id = 'lea@gmail.com'
         priv_key_pass = 'lea'
         publ_key_user_id = 'nikola@gmail.com'
-        algorithm = 'AES128'
-        destination_file = 'test_auth_samo'
-        text = text.encode()
+        algorithm = 'Cast5'
+        # destination_file = 'test_nista'
+
+        if authentication or encryption or radix64 or compress:
         
-        # Load private key
-        if authentication:
-            private_key = self.parentWindow.getPrivateKey(priv_key_user_id).decrypt(priv_key_pass)
-            public_key_id = self.parentWindow.getPrivateKey(priv_key_user_id).keyId
-            
-            # Hash the message with SHA-1
-            digest = hashes.Hash(hashes.SHA1(), backend=default_backend())
-            digest.update(text)
-            hashed_message = digest.finalize()
-
-            # Encrypt the hashed message with the private key using rsa algorithm
-            signature = private_key.sign(hashed_message, padding.PSS(mgf=padding.MGF1(hashes.SHA1()), salt_length=padding.PSS.MAX_LENGTH), hashes.SHA1())
-
-            # Append the signature to the message
-
-            appended_data = {
-                "authenticated" : "True",
-                "signature" : base64.b64encode(signature).decode('utf-8'),
-                "public_key_id" : public_key_id
-            }
-
-            # print(text)
-
-            appended_data = json.dumps(appended_data)
-            text = text.decode() + "appended_data" + appended_data
             text = text.encode()
 
-        if compress:
+            # Sign message
+            if authentication:
+                # Load private key
+                private_key = self.parentWindow.getPrivateKey(priv_key_user_id).decrypt(priv_key_pass)
+                public_key_id = self.parentWindow.getPrivateKey(priv_key_user_id).keyId
+                
+                # Hash the message with SHA-1
+                digest = hashes.Hash(hashes.SHA1(), backend=default_backend())
+                digest.update(text)
+                hashed_message = digest.finalize()
+
+                # Encrypt the hashed message with the private key using rsa algorithm
+                signature = private_key.sign(hashed_message, padding.PSS(mgf=padding.MGF1(hashes.SHA1()), salt_length=padding.PSS.MAX_LENGTH), hashes.SHA1())
+
+                # Append the signature and public key id to the message
+                appended_data = {
+                    "signature" : base64.b64encode(signature).decode('utf-8'),
+                    "public_key_id" : public_key_id
+                }
+
+                appended_data = json.dumps(appended_data)
+                text = text.decode() + "appended_data_auth" + appended_data
+                text = text.encode()
+
             # Compress the message
-            compressed_message = utils.zip_data(text)
-            text = compressed_message
+            if compress:
+                compressed_message = utils.zip_data(text)
+                text = compressed_message
 
-        
-        # Load public key
-        if encryption:
-            # Generate random 128-bit session key
-            session_key = os.urandom(16)
+            
+            # Encrypt the message
+            if encryption:
+                # Generate random 128-bit session key
+                session_key = os.urandom(16)
 
-            # Encrypt the message with the session key
-            if algorithm == "Cast5":
-                iv = os.urandom(8)
-                cipher = Cipher(algorithms.CAST5(session_key), modes.CBC(iv), backend=default_backend())
-                block_size = algorithms.CAST5.block_size
-            elif algorithm == "AES128":
-                iv = os.urandom(16)
-                cipher = Cipher(algorithms.AES(session_key), modes.CBC(iv), backend=default_backend())
-                block_size = algorithms.AES.block_size
+                # Encrypt the message with the session key
+                if algorithm == "Cast5":
+                    iv = os.urandom(8)
+                    cipher = Cipher(algorithms.CAST5(session_key), modes.CBC(iv), backend=default_backend())
+                    block_size = algorithms.CAST5.block_size
+                elif algorithm == "AES128":
+                    iv = os.urandom(16)
+                    cipher = Cipher(algorithms.AES(session_key), modes.CBC(iv), backend=default_backend())
+                    block_size = algorithms.AES.block_size
 
-            # import pdb
-            # pdb.set_trace()
+                # Pad the text to be a multiple of the block size
+                padder = sym_padding.PKCS7(block_size).padder()
+                text = padder.update(text) + padder.finalize()
+                encryptor = cipher.encryptor()
+                text = encryptor.update(text) + encryptor.finalize()
 
-            padder = sym_padding.PKCS7(block_size).padder()
-            text = padder.update(text) + padder.finalize()
-            encryptor = cipher.encryptor()
-            text = encryptor.update(text) + encryptor.finalize()
+                # Get the public key
+                public_key = self.parentWindow.getPublicKey(publ_key_user_id).publicKey
+                public_key_id = self.parentWindow.getPublicKey(publ_key_user_id).keyId
 
-            public_key = self.parentWindow.getPublicKey(publ_key_user_id).publicKey
-            public_key_id = self.parentWindow.getPublicKey(publ_key_user_id).keyId
+                # Encrypt the session key with the public key
+                encrypted_session_key = public_key.encrypt(session_key, padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA1()), algorithm=hashes.SHA1(), label=None))
 
-            # Encrypt the session key with the public key
-            encrypted_session_key = public_key.encrypt(session_key, padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA1()), algorithm=hashes.SHA1(), label=None))
+                # Append the encrypted session key and additional data to the message
+                appended_data = {
+                    "algorithm" : algorithm,
+                    "iv" : base64.b64encode(iv).decode('utf-8'),
+                    "public_key_id" : public_key_id,
+                    "encrypted_session_key" : base64.b64encode(encrypted_session_key).decode('utf-8')
+                }
 
-            # Append the encrypted session key to the message
+                appended_data = json.dumps(appended_data)
+                text = base64.b64encode(text).decode('utf-8') + "appended_data_encr" + appended_data
+                text = text.encode()
 
-            appended_data = {
-                "encrypted" : "True",
-                "algorithm" : algorithm,
-                "iv" : base64.b64encode(iv).decode('utf-8'),
-                "public_key_id" : public_key_id,
-                "encrypted_session_key" : base64.b64encode(encrypted_session_key).decode('utf-8')
-            }
-
-            appended_data = json.dumps(appended_data)
-            text = base64.b64encode(text).decode('utf-8') + "appended_data" + appended_data
-            text = text.encode()
-
-        if radix64:
             # Encode the message with radix64
-            text = utils.encode_radix64(text)
-        
-        # if (encryption is True or authentication is True or radix64 is True) and compress is False:
-        #     text = text.decode()
+            if radix64:
+                text = utils.encode_radix64(text)
 
-        # if encryption is False and authentication is False and compress is True and radix64 is False:
-        #     with open(f"./../Messages/{destination_file}.txt", "wb") as file:
-        #         file.write(text)
-        #         file.flush()
-        # else:
-        #     with open(f"./../Messages/{destination_file}.txt", "w") as file:
-        #         file.write(text)
-        #         file.flush()
+            if compress and not encryption and not radix64:
+                with open(f"./../Messages/{destination_file}.txt", "wb") as file:
+                    file.write(text)
+                    file.flush() 
+            else:
+                if not radix64:
+                    text = text.decode()  
 
-        text = text.decode()
+                with open(f"./../Messages/{destination_file}.txt", "w") as file:
+                    file.write(text)
+                    file.flush()
+                
 
-        with open(f"./../Messages/{destination_file}.txt", "w") as file:
-            file.write(text)
-            file.flush()
+        else:
+            with open(f"./../Messages/{destination_file}.txt", "w") as file:
+                file.write(text)
+                file.flush()
         
 
         # Show success message
@@ -218,10 +216,6 @@ I should put it all behind me, shouldn't I?"""
 
     def closeWindow(self):
         self.root.destroy()
-
-    @staticmethod
-    def method():
-        pass
 
 
 class ApplicationGUI:
