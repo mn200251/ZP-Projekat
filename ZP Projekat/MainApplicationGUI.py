@@ -115,8 +115,13 @@ class MainApplicationGUI:
     
     def getPublicKey(self, userId):
         return publicKeyRing.getKeyByUserId(userId)
+    
+    def getPublicKeyByKeyId(self, keyId):
+        return publicKeyRing.getKey(keyId)
+    
+    def getPrivateKeyByKeyId(self, keyId):
+        return privateKeyRing.getKey(keyId)
 
-    @staticmethod
     def refreshRings(self):
         self.refreshPrivateKeyRing()
         self.refreshPublicKeyRing()
