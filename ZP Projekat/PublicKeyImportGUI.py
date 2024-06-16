@@ -7,7 +7,7 @@ from cryptography.hazmat.primitives import serialization
 
 from KeyGenerationGUI import privateKeyRing, publicKeyRing
 
-class KeyImportGUI:
+class PublicKeyImportGUI:
     def __init__(self, root, parentWindow):
         self.parentWindow = parentWindow
         self.root = root

@@ -50,8 +50,8 @@ def init():
 
     os.chdir(new_working_directory)
 
-    if not os.path.exists((os.path.join(new_working_directory, "PrivateKeys"))):
-        os.makedirs(os.path.join(new_working_directory, "PrivateKeys"))
+    if not os.path.exists((os.path.join(new_working_directory, "Key Pairs"))):
+        os.makedirs(os.path.join(new_working_directory, "Key Pairs"))
 
     if not os.path.exists((os.path.join(new_working_directory, "PublicKeys"))):
         os.makedirs(os.path.join(new_working_directory, "PublicKeys"))

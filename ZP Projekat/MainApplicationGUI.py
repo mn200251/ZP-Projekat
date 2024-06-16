@@ -2,8 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 
 from KeyGenerationGUI import KeyGenerationGUI, privateKeyRing, publicKeyRing, privateKeyRingName, publicKeyRingName
-from KeyImportGUI import KeyImportGUI
-from KeyExportGUI import KeyExportGUI
+from PublicKeyImportGUI import PublicKeyImportGUI
+from KeyPairImportGUI import KeyPairImportGUI
+from KeyPairExportGUI import KeyPairExportGUI
+from PublicKeyExportGUI import PublicKeyExportGUI
 
 
 class MainApplicationGUI:
@@ -24,13 +26,25 @@ class MainApplicationGUI:
                                          width=self.buttonWidth, height=self.buttonHeight)
         self.generate_button.pack(pady=10)
 
-        self.import_button = tk.Button(self.button_frame, text="Import Key", command=self.import_key,
-                                       width=self.buttonWidth, height=self.buttonHeight)
-        self.import_button.pack(pady=10)
+        self.import_key_pair_button = tk.Button(self.button_frame, text="Import Key Pair",
+                                                command=self.importKeyPair,
+                                                width=self.buttonWidth, height=self.buttonHeight)
+        self.import_key_pair_button.pack(pady=10)
 
-        self.export_button = tk.Button(self.button_frame, text="Export Key", command=self.export_key,
-                                       width=self.buttonWidth, height=self.buttonHeight)
-        self.export_button.pack(pady=10)
+        self.export_key_pair_button = tk.Button(self.button_frame, text="Export Key Pair",
+                                                command=self.exportKeyPair,
+                                                width=self.buttonWidth, height=self.buttonHeight)
+        self.export_key_pair_button.pack(pady=10)
+
+        self.import_public_key_button = tk.Button(self.button_frame, text="Import Public Key",
+                                                  command=self.importPublicKey,
+                                                  width=self.buttonWidth, height=self.buttonHeight)
+        self.import_public_key_button.pack(pady=10)
+
+        self.export_public_key_button = tk.Button(self.button_frame, text="Export Public Key",
+                                                  command=self.exportPublicKey,
+                                                  width=self.buttonWidth, height=self.buttonHeight)
+        self.export_public_key_button.pack(pady=10)
 
         self.send_message_button = tk.Button(self.button_frame, text="Send Message", command=self.send_message,
                                              width=self.buttonWidth, height=self.buttonHeight)
@@ -77,8 +91,8 @@ class MainApplicationGUI:
 
         self.publicKeyRingTable = ttk.Treeview(self.tables_frame)
         self.publicKeyRingTable["columns"] = (
-        "Timestamp", "Key ID", "Public Key", "Owner Trust", "User ID", "Key Legitimacy", "Signatures",
-        "Signature Trusts")
+            "Timestamp", "Key ID", "Public Key", "Owner Trust", "User ID", "Key Legitimacy", "Signatures",
+            "Signature Trusts")
 
         # Define column headings for the second table
         self.publicKeyRingTable.heading("#0", text="Index")
@@ -108,7 +122,6 @@ class MainApplicationGUI:
         # Pack the second Treeview widget
         self.publicKeyRingTable.pack(expand=True, fill="both")
 
-
     def refreshRings(self):
         self.refreshPrivateKeyRing()
         self.refreshPublicKeyRing()
@@ -118,12 +131,12 @@ class MainApplicationGUI:
 
         index = 0
         for row in privateKeyRing.getAllKeys():
-            self.privateKeyRingTable.insert("", "end", text=str(index), values=(row.timestamp, row.keyId, row.publicKey.public_numbers().n, row.encryptedPrivateKey, row.userId))
+            self.privateKeyRingTable.insert("", "end", text=str(index), values=(
+                row.timestamp, row.keyId, row.publicKey.public_numbers().n, row.encryptedPrivateKey, row.userId))
 
             index += 1
 
         privateKeyRing.save2Disk(privateKeyRingName)
-
 
     def refreshPublicKeyRing(self):
         self.publicKeyRingTable.delete(*self.publicKeyRingTable.get_children())
@@ -131,7 +144,8 @@ class MainApplicationGUI:
         index = 0
         for row in publicKeyRing.getAllKeys():
             self.publicKeyRingTable.insert("", "end", text=str(index), values=(
-            row.timestamp, row.keyId, row.publicKey.public_numbers().n, row.ownerTrust, row.userId, row.keyLegitimacy, row.signatures, row.signatureTrust))
+                row.timestamp, row.keyId, row.publicKey.public_numbers().n, row.ownerTrust, row.userId,
+                row.keyLegitimacy, row.signatures, row.signatureTrust))
 
             # tag = "red"
             # if row.keyLegitimacy == 100:
@@ -152,15 +166,25 @@ class MainApplicationGUI:
         keygen_window.grab_set()  # prevents from focusing on main window when this one is active
         keygen_app = KeyGenerationGUI(keygen_window, self)
 
-    def import_key(self):
+    def importKeyPair(self):
         importWindow = tk.Toplevel(self.root)
         importWindow.grab_set()  # prevents from focusing on main window when this one is active
-        publicKeyImporter = KeyImportGUI(importWindow, self)
+        publicKeyImporter = KeyPairImportGUI(importWindow, self)
 
-    def export_key(self):
+    def exportKeyPair(self):
         exportWindow = tk.Toplevel(self.root)
         exportWindow.grab_set()  # prevents from focusing on main window when this one is active
-        publicKeyExporter = KeyExportGUI(exportWindow, self)
+        publicKeyExporter = KeyPairExportGUI(exportWindow, self)
+
+    def importPublicKey(self):
+        importWindow = tk.Toplevel(self.root)
+        importWindow.grab_set()  # prevents from focusing on main window when this one is active
+        publicKeyImporter = PublicKeyImportGUI(importWindow, self)
+
+    def exportPublicKey(self):
+        exportWindow = tk.Toplevel(self.root)
+        exportWindow.grab_set()  # prevents from focusing on main window when this one is active
+        publicKeyExporter = PublicKeyExportGUI(exportWindow, self)
 
     def send_message(self):
         # Implement the logic for sending a message

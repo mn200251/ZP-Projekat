@@ -19,7 +19,7 @@ class KeyRing:
     def __init__(self):
         self.keys = []
 
-    def getAllKeys(self):
+    def getAllKeys(self) -> List["KeyRow"]:
         return self.keys
 
     def getKey(self, keyId):
