@@ -89,28 +89,9 @@ class SendMessageGUI:
         algorithm = self.algorithm_var.get()
         destination_file = self.destination_entry.get()
 
-        # if text is None or (encryption is None and publ_key_user_id is None) or (authentication is None and (priv_key_user_id is None or priv_key_pass is None)) or destination_file is None:
-        #     tk.messagebox.showinfo("Error", "Please enter all required information")
-        #     return
-        
-        text = """Things fall apart and time breaks your heart
-I wasn't there, but I know
-She was your girl, you showed her the world
-You fell out of love and you both let go
-She was cryin' on my shoulder, all I could do was hold her
-Only made us closer until July
-Now I know that you love me, you don't need to remind me
-I should put it all behind me, shouldn't I?"""
-
-        # encryption = False
-        # authentication = True
-        # compress = False
-        # radix64 = False
-        priv_key_user_id = 'lea@gmail.com'
-        priv_key_pass = 'lea'
-        publ_key_user_id = 'nikola@gmail.com'
-        algorithm = 'Cast5'
-        # destination_file = 'test_nista'
+        if text is None or (encryption is None and publ_key_user_id is None) or (authentication is None and (priv_key_user_id is None or priv_key_pass is None)) or destination_file is None:
+            tk.messagebox.showinfo("Error", "Please enter all required information")
+            return
 
         if authentication or encryption or radix64 or compress:
         
