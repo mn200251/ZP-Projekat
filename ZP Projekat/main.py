@@ -12,7 +12,7 @@ def init():
     global privateKeyRing, publicKeyRing
 
     if len(sys.argv) != 2:
-        print("Error: Only one argument is expected.")
+        print("Error: One argument is expected.")
         sys.exit(1)
 
     userPath = sys.argv[1]
@@ -21,6 +21,15 @@ def init():
     current_directory = os.getcwd()
 
 
+    if not os.path.exists("Messages"):
+        try:
+            os.makedirs("Messages")
+
+            print(f"Messages folder created.")
+        except Exception as e:
+            print(f"Error creating Mesages folder: {e}")
+            sys.exit(1)
+
     new_working_directory = os.path.join(current_directory, userPath)
 
     if not os.path.exists(new_working_directory):
@@ -28,18 +37,25 @@ def init():
             os.makedirs(new_working_directory)
             # os.chdir(new_working_directory)
 
-            os.makedirs(os.path.join(new_working_directory, "PrivateKeys"))
-            os.makedirs(os.path.join(new_working_directory, "PublicKeys"))
+            # os.makedirs(os.path.join(new_working_directory, "PrivateKeys"))
+            # os.makedirs(os.path.join(new_working_directory, "PublicKeys"))
 
             # os.makedirs(os.path.join(new_working_directory, "KeyRings", privateKeyRingName))
             # os.makedirs(os.path.join(new_working_directory, "KeyRings", publicKeyRingName))
 
             print(f"Directory {new_working_directory} created.")
         except Exception as e:
-            print(f"Error creating directory {new_working_directory}: {e}")
+            print(f"Error creating directories: {e}")
             sys.exit(1)
 
     os.chdir(new_working_directory)
+
+    if not os.path.exists((os.path.join(new_working_directory, "Key Pairs"))):
+        os.makedirs(os.path.join(new_working_directory, "Key Pairs"))
+
+    if not os.path.exists((os.path.join(new_working_directory, "PublicKeys"))):
+        os.makedirs(os.path.join(new_working_directory, "PublicKeys"))
+
 
     # if privateKeyRing is None:
     #     privateKeyRing = PrivateKeyRing()

@@ -5,6 +5,7 @@ import os
 import pickle
 import uuid
 from abc import abstractmethod
+from tkinter import messagebox
 from typing import List
 
 from cryptography.hazmat.backends import default_backend
@@ -18,7 +19,7 @@ class KeyRing:
     def __init__(self):
         self.keys = []
 
-    def getAllKeys(self):
+    def getAllKeys(self) -> List["KeyRow"]:
         return self.keys
 
     def getKey(self, keyId):
@@ -166,6 +167,8 @@ class PublicKeyRing(KeyRing):
         except FileNotFoundError:
             print(f"KeyRing not found on disk for user. Creating a new one...")
             return None
+        except:
+            return None
 
 
 class PrivateKeyRing(KeyRing):
@@ -265,6 +268,8 @@ class PrivateKeyRing(KeyRing):
         except FileNotFoundError:
             print(f"KeyRing not found on disk for user. Creating a new one...")
             return None
+        except:
+            return None
 
 
 class KeyRow:
@@ -284,6 +289,9 @@ class PrivateKeyRow(KeyRow):
 
         print("Before encryption: n = " + str(publicKey.public_numbers().n))
 
+        # check if new user id was already mentioned somewhere before, find the ? and replace with owner trust value
+        # recalculate keyLegitimacy
+        # fuj kod
         if privateKey and passcode:
             # encrypt private key
             self.encryptedPrivateKey = self.encrypt(privateKey, passcode)
@@ -292,6 +300,35 @@ class PrivateKeyRow(KeyRow):
             self.encryptedPrivateKey = encryptedPrivateKey
         else:
             raise ValueError("Invalid arguments provided for KeyRow initialization")
+
+        for row in publicKeyRing.getAllKeys():
+            for i in range(0, len(row.signatureTrust.split(", "))):
+                signature = row.signatureTrust.split(", ")[i]
+                signature = signature.strip(' ')
+
+                if signature != userId:
+                    continue
+
+                # find the ? in string and change it to self.ownerTrust value
+                newSignatureString = ""
+                newSignatures = 0
+                for j in range(0, len(row.signatures.split(" ")) - 1):
+                    # print(row.signatures.split(" ")[j])
+                    if row.signatures.split(" ")[j] == "":
+                        continue
+
+                    if i == j and row.signatures.split(" ")[i] == "?":
+                        newSignatureString += str(100) + " "
+                        newSignatures += 100
+                    elif row.signatures.split(" ")[j] == "?":
+                        newSignatureString += "? "
+                        continue
+                    else:
+                        newSignatureString += row.signatures.split(" ")[j] + " "
+                        newSignatures += int(row.signatures.split(" ")[j])
+
+                row.signatures = newSignatureString
+                row.keyLegitimacy = min(newSignatures, 100)
 
     def hashPasscode(self, passcode):
         value = passcode.encode()
@@ -351,13 +388,12 @@ class PrivateKeyRow(KeyRow):
             return privateKey
 
         except:
-            print("Incorrect passcode!")
+            messagebox.showerror("Error", "Incorrect passcode provided!")
+            # print("Incorrect passcode!")
             return -1
 
 
 class PublicKeyRow(KeyRow):
-    # PublicKeyRow(timestamp=timestamp, publicKey=publicKey, ownerTrust=ownerTrust, userId=userId, keyLegitimacy=keyLegitimacy,
-    #                               signatures=signatures, signatureTrust=signatureTrust))
     def __init__(self, publicKey, ownerTrust, userId, signatureTrust, signatures=None, timestamp=None, keyLegitimacy=None):
         super().__init__(publicKey, userId)
 
@@ -372,6 +408,19 @@ class PublicKeyRow(KeyRow):
             self.signatures = signatures
             return
 
+        # check if there are duplicate signatureTrust values inserted
+        tempSignaturesList = self.signatureTrust.split(", ")
+        tempSignaturesList = [x.strip(' ') for x in tempSignaturesList]
+        if len(tempSignaturesList) != len(set(tempSignaturesList)):
+            # this is called when there are atleast 2 signatures, so it wont break
+            self.signatureTrust = ""
+            for signature in set(tempSignaturesList):
+                self.signatureTrust += signature + ", "
+            self.signatureTrust = self.signatureTrust[:-2]
+
+            messagebox.showwarning("Warning", "Removing duplicate signatures!")
+
+
         # get all signature values and put them in self.signatures
         self.signatures = ""
         self.keyLegitimacy = 0
@@ -380,16 +429,22 @@ class PublicKeyRow(KeyRow):
         signatureIterate = self.signatureTrust.split(",")
 
         for signature in signatureIterate:
+            signature = signature.strip(' ')
+
+            if signature == "":
+                continue
+
             key = privateKeyRing.getKeyByUserId(signature)
             if key == -1:  # key not found in private keyring
                 key = publicKeyRing.getKeyByUserId(signature)
 
                 if key == -1:  # error - user does not exist!
-                    print("key with id:" + signature + " not found!")
+                    self.signatures += "? "
+                    # messagebox.showwarning("Warning", "Signature with id: " + signature + " not found!")
+                    print("Signature with id:" + signature + " not found!")
                     continue
 
                 # key found in public keyring
-
                 self.signatures += str(key.ownerTrust) + " "
                 currLegitimacy += key.ownerTrust
 
@@ -403,6 +458,41 @@ class PublicKeyRow(KeyRow):
         self.keyLegitimacy = currLegitimacy
         if self.keyLegitimacy > 100:
             self.keyLegitimacy = 100
+
+
+        # check if new user id was already mentioned somewhere before, find the ? and replace with owner trust value
+        # recalculate keyLegitimacy
+        # fuj kod
+        for row in publicKeyRing.getAllKeys():
+            for i in range(0, len(row.signatureTrust.split(", "))):
+                signature = row.signatureTrust.split(", ")[i]
+                signature = signature.strip(' ')
+
+                if signature != userId:
+                    continue
+
+                # find the ? in string and change it to self.ownerTrust value
+                newSignatureString = ""
+                newSignatures = 0
+                for j in range(0, len(row.signatures.split(" ")) - 1):
+                    # print(row.signatures.split(" ")[j])
+                    if row.signatures.split(" ")[j] == "":
+                        continue
+
+                    if i == j and row.signatures.split(" ")[i] == "?":
+                        newSignatureString += str(self.ownerTrust) + " "
+                        newSignatures += self.ownerTrust
+                    elif row.signatures.split(" ")[j] == "?":
+                        newSignatureString += "? "
+                        continue
+                    else:
+                        newSignatureString += row.signatures.split(" ")[j] + " "
+                        newSignatures += int(row.signatures.split(" ")[j])
+
+                row.signatures = newSignatureString
+                row.keyLegitimacy = min(newSignatures, 100)
+
+
 
 
 privateKeyRing = PrivateKeyRing()

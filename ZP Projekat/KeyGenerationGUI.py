@@ -71,6 +71,10 @@ class KeyGenerationGUI:
             messagebox.showinfo("Error", "Please enter all required information")
             return
 
+        if publicKeyRing.getKeyByUserId(email) != -1 or privateKeyRing.getKeyByUserId(email) != -1:
+            messagebox.showerror("Error", "That user id already exists!")
+            return
+
         privateKey = rsa.generate_private_key(public_exponent=65537, key_size=keySize)
 
         # Get the public key
