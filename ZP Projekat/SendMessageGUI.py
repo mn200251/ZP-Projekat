@@ -2,7 +2,6 @@ import base64
 import json
 import tkinter as tk
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import padding as sym_padding
@@ -28,7 +27,6 @@ class SendMessageGUI:
         self.compress_checkbox_var = tk.IntVar()
         self.radix64_checkbox_var = tk.IntVar()
 
-        # Checkbox entries
         self.encryption_checkbox = tk.Checkbutton(root, text="Encrypt message", variable=self.encryption_checkbox_var)
         self.authentication_checkbox = tk.Checkbutton(root, text="Authenticate message", variable=self.authentication_checkbox_var) 
         self.compress_checkbox = tk.Checkbutton(root, text="Compress message", variable=self.compress_checkbox_var)
