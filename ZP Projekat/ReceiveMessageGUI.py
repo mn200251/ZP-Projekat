@@ -75,7 +75,10 @@ class ReceiveMessageGUI:
                 iv = base64.b64decode(appended_data['iv'])
                 encrypted_session_key = base64.b64decode(appended_data['encrypted_session_key'])
 
-                private_key = self.parentWindow.getPrivateKeyByKeyId(appended_data['public_key_id']).decrypt('nikola')
+                # Prompt user for key password
+                password = messagebox.askstring("Password", "Enter the password for the private key under user ID: " + self.parentWindow.getPrivateKeyByKeyId(appended_data['public_key_id']).userId) 
+
+                private_key = self.parentWindow.getPrivateKeyByKeyId(appended_data['public_key_id']).decrypt(password)
                 session_key = private_key.decrypt(encrypted_session_key, padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA1()), algorithm=hashes.SHA1(), label=None))
 
                 if algorithm == "Cast5":
