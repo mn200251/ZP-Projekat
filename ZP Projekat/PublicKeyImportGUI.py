@@ -69,25 +69,10 @@ class PublicKeyImportGUI:
             messagebox.showerror("Error", "Owner Trust must be a number!")
             return
 
-        # check if signatures are valid
-
-
         # Read the public key from the selected file
         with open(self.file_path, "rb") as key_file:
             public_key = serialization.load_pem_public_key(key_file.read(), backend=default_backend())
 
-        # Further process the public key and additional information as needed
-        # For example, you can store them in a data structure or perform other operations
-
-        # # Reset the fields
-        # # self.file_entry.delete(0, tk.END)
-        # self.owner_trust_entry.delete(0, tk.END)
-        # self.user_id_entry.delete(0, tk.END)
-        # self.signature_trusts_entry.delete(0, tk.END)
-        # self.file_path = ""
-        # self.owner_trust = ""
-        # self.user_id = ""
-        # self.signature_trusts = ""
 
         if publicKeyRing.getKeyByUserId(self.user_id) != -1 or privateKeyRing.getKeyByUserId(self.user_id) != -1:
             messagebox.showerror("Error", "That user id already exists!")

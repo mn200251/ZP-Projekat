@@ -64,7 +64,7 @@ class PublicKeyRing(KeyRing):
     def addKey(self, publicKey, ownerTrust, userId, signatureTrust):
         # check if key id is already in key ring
         keyId = publicKey.public_numbers().n % (2 ** 64)
-        if keyId not in self.keys:
+        if keyId not in [x.keyId for x in self.keys]:
             self.keys.append(PublicKeyRow(publicKey=publicKey, ownerTrust=ownerTrust, userId=userId, signatureTrust=signatureTrust))
             return
 
@@ -74,7 +74,7 @@ class PublicKeyRing(KeyRing):
     def loadKey(self, timestamp, publicKey, ownerTrust, userId, keyLegitimacy, signatures, signatureTrust):
         # check if key id is already in key ring
         keyId = publicKey.public_numbers().n % (2 ** 64)
-        if keyId not in self.keys:
+        if keyId not in [x.keyId for x in self.keys]:
             self.keys.append(
                 PublicKeyRow(timestamp=timestamp, publicKey=publicKey, ownerTrust=ownerTrust, userId=userId, keyLegitimacy=keyLegitimacy,
                               signatures=signatures, signatureTrust=signatureTrust))
@@ -102,10 +102,6 @@ class PublicKeyRing(KeyRing):
                 print(e)
                 return
 
-        # with open(path, 'wb') as file:
-        #     pickle.dump(self, file)
-        #     print(f"KeyRing saved to: {path}")
-
         jsonFile = {}
 
         for keyRow in self.keys:
@@ -123,12 +119,6 @@ class PublicKeyRing(KeyRing):
             jsonFile[keyRow.keyId]["KeyLegitimacy"] = keyRow.keyLegitimacy
             jsonFile[keyRow.keyId]["Signatures"] = keyRow.signatures
             jsonFile[keyRow.keyId]["SignatureTrust"] = keyRow.signatureTrust
-
-            # private_key_pem = private_key.private_bytes(
-            #     encoding=serialization.Encoding.PEM,
-            #     format=serialization.PrivateFormat.TraditionalOpenSSL,
-            #     encryption_algorithm=serialization.NoEncryption()
-            # )
 
         try:
             with open(path, 'w') as file:
@@ -180,7 +170,7 @@ class PrivateKeyRing(KeyRing):
     def addKey(self, publicKey, privateKey, userId, passcode):
         # check if key id is already in key ring
         keyId = publicKey.public_numbers().n % (2 ** 64)
-        if keyId not in self.keys:
+        if keyId not in [x.keyId for x in self.keys]:
             self.keys.append(PrivateKeyRow(publicKey=publicKey, privateKey=privateKey, userId=userId, passcode=passcode,
                                            timestamp=None, encryptedPrivateKey=None))
             return
@@ -192,11 +182,11 @@ class PrivateKeyRing(KeyRing):
     def loadKey(self, timestamp, publicKey, encryptedPrivateKey, userId):
         # check if key id is already in key ring
         keyId = publicKey.public_numbers().n % (2 ** 64)
-        if keyId not in self.keys:
+        if keyId not in [x.keyId for x in self.keys]:
             self.keys.append(
                 PrivateKeyRow(publicKey=publicKey, privateKey=None, userId=userId, passcode=None, timestamp=timestamp,
                               encryptedPrivateKey=encryptedPrivateKey))
-            return
+            return False
 
         # Error - key with that id already exists!
         print("Key with that id already exists!")
@@ -277,7 +267,6 @@ class KeyRow:
         self.timestamp = datetime.now()
         self.keyId = publicKey.public_numbers().n % (2 ** 64)
         self.publicKey = publicKey
-        # print("///\n" + str(self.publicKey.public_numbers().n) + "\n" + str(self.keyId))
         self.userId = userId
 
 
@@ -313,7 +302,6 @@ class PrivateKeyRow(KeyRow):
                 newSignatureString = ""
                 newSignatures = 0
                 for j in range(0, len(row.signatures.split(" ")) - 1):
-                    # print(row.signatures.split(" ")[j])
                     if row.signatures.split(" ")[j] == "":
                         continue
 
@@ -380,7 +368,6 @@ class PrivateKeyRow(KeyRow):
             decrypted_data = decryptor.update(ciphertext_bytes) + decryptor.finalize()
 
             # Deserialize the decrypted data into an RSA private key object
-            # privateKey = serialization.load_pem_private_key(unpadded_data, password=None, backend=default_backend())
             privateKey = serialization.load_der_private_key(decrypted_data, password=None, backend=default_backend())
 
             print("After decryption: n = " + str(privateKey.private_numbers().p * privateKey.private_numbers().q))
@@ -491,8 +478,6 @@ class PublicKeyRow(KeyRow):
 
                 row.signatures = newSignatureString
                 row.keyLegitimacy = min(newSignatures, 100)
-
-
 
 
 privateKeyRing = PrivateKeyRing()

@@ -52,11 +52,6 @@ class KeyPairExportGUI:
 
         allKeys = privateKeyRing.getAllKeys()
 
-        # if self.keyRingType == 1:
-        #     allKeys = privateKeyRing.getAllKeys()
-        # else:
-        #     allKeys = publicKeyRing.getAllKeys()
-
         try:
             targetRow = allKeys[int(self.index.get())]
         except ValueError:
@@ -81,19 +76,17 @@ class KeyPairExportGUI:
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
 
-        # Assuming encryptedPrivateKey is already in PEM format bytes
         pem_private_bytes = encryptedPrivateKey
 
         currentDirectory = os.getcwd()
         path = os.path.join(currentDirectory, "Key Pairs", output_file + ".pem")
 
-        # Ensure the directory exists
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
         # Write the PEM-formatted bytes to a file
         with open(path, "wb") as f:
             f.write(pem_public_bytes)
-            f.write(b"\n")  # Add a newline for separation
+            f.write(b"\n")
             f.write(pem_private_bytes)
 
         print(f"Keys exported to: {path}")

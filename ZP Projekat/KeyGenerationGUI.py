@@ -14,8 +14,6 @@ from KeyRing import *
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 
-
-
 class KeyGenerationGUI:
     def __init__(self, root, parentWindow):
         self.parentWindow = parentWindow
@@ -32,7 +30,6 @@ class KeyGenerationGUI:
 
         self.key_size_label = tk.Label(root, text="Key Size:")
 
-        # Radio buttons for key size selection
         self.key_size_var = tk.IntVar()
         self.key_size_var.set(1024)  # Default key size
         self.key_size_1024 = tk.Radiobutton(root, text="1024 bits", variable=self.key_size_var, value=1024)
@@ -41,10 +38,8 @@ class KeyGenerationGUI:
         self.password_label = tk.Label(root, text="Password for Private Key:")
         self.password_entry = tk.Entry(root, show="*")
 
-        # Generate key pair button
         self.generate_button = tk.Button(root, text="Generate RSA Key Pair", command=self.generate_key_pair)
 
-        # Pack labels, entries, radio buttons, and button
         self.name_label.pack(pady=5)
         self.name_entry.pack(pady=5)
         self.email_label.pack(pady=5)
@@ -77,15 +72,13 @@ class KeyGenerationGUI:
 
         privateKey = rsa.generate_private_key(public_exponent=65537, key_size=keySize)
 
-        # Get the public key
         publicKey = privateKey.public_key()
 
         # for testing purposes
-        self.createPublicKeyPem(publicKey)
+        # self.createPublicKeyPem(publicKey)
 
         privateKeyRing.addKey(publicKey=publicKey, privateKey=privateKey, userId=email, passcode=passcode)
 
-        # Show success message
         messagebox.showinfo("Success", "RSA Key pair generated successfully")
 
         self.parentWindow.refreshRings()
@@ -108,8 +101,6 @@ class KeyGenerationGUI:
         random_string = ''.join(secrets.choice(characters) for _ in range(8))
 
         currentDirectory = os.getcwd()
-
-        # path = "./PublicKeys/" + random_string + ".pem"
 
         path = os.path.join(currentDirectory, "PublicKeys", random_string + ".pem")
 

@@ -75,10 +75,13 @@ class KeyPairImportGUI:
                 # Load the private key
                 private_key = private_key_pem
 
-                privateKeyRing.loadKey(datetime.now(), public_key, private_key, self.user_id_entry.get())
-                self.parentWindow.refreshRings()
+                if privateKeyRing.loadKey(datetime.now(), public_key, private_key, self.user_id_entry.get()):
+                    self.parentWindow.refreshRings()
 
-                messagebox.showerror("Success", "Successfully imported key pair from PEM file.")
+                    messagebox.showinfo("Success", "Successfully imported key pair from PEM file.")
+
+                else:
+                    messagebox.showwarning("Warning", "Key pair is already imported!")
 
             except Exception as e:
                 messagebox.showerror("Error loading key pair!", str(e))

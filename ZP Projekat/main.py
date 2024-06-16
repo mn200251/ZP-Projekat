@@ -35,13 +35,6 @@ def init():
     if not os.path.exists(new_working_directory):
         try:
             os.makedirs(new_working_directory)
-            # os.chdir(new_working_directory)
-
-            # os.makedirs(os.path.join(new_working_directory, "PrivateKeys"))
-            # os.makedirs(os.path.join(new_working_directory, "PublicKeys"))
-
-            # os.makedirs(os.path.join(new_working_directory, "KeyRings", privateKeyRingName))
-            # os.makedirs(os.path.join(new_working_directory, "KeyRings", publicKeyRingName))
 
             print(f"Directory {new_working_directory} created.")
         except Exception as e:
@@ -55,12 +48,6 @@ def init():
 
     if not os.path.exists((os.path.join(new_working_directory, "PublicKeys"))):
         os.makedirs(os.path.join(new_working_directory, "PublicKeys"))
-
-
-    # if privateKeyRing is None:
-    #     privateKeyRing = PrivateKeyRing()
-    # if publicKeyRing is None:
-    #     publicKeyRing = PublicKeyRing()
 
     privateKeyRing = privateKeyRing.tryLoadFromDisk(privateKeyRingName)
     publicKeyRing.tryLoadFromDisk(publicKeyRingName)
