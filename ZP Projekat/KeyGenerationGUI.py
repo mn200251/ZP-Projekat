@@ -74,8 +74,7 @@ class KeyGenerationGUI:
 
         publicKey = privateKey.public_key()
 
-        # for testing purposes
-        # self.createPublicKeyPem(publicKey)
+        self.createPublicKeyPem(publicKey)
 
         privateKeyRing.addKey(publicKey=publicKey, privateKey=privateKey, userId=email, passcode=passcode)
 

@@ -113,6 +113,10 @@ class ReceiveMessageGUI:
             digest = hashes.Hash(hashes.SHA1(), backend=default_backend())
             digest.update(text.encode())
             hashed_message = digest.finalize()
+
+            if self.parentWindow.getPublicKeyByKeyId(appended_data['public_key_id']).keyLegitimacy < 100:
+                messagebox.showerror("Error", "User is not trusted")
+                return
         
             public_key = self.parentWindow.getPublicKeyByKeyId(appended_data['public_key_id']).publicKey
             signature = base64.b64decode(appended_data['signature'])
