@@ -1,7 +1,7 @@
 import base64
 import tkinter as tk
 from tkinter import filedialog
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -76,7 +76,7 @@ class ReceiveMessageGUI:
                 encrypted_session_key = base64.b64decode(appended_data['encrypted_session_key'])
 
                 # Prompt user for key password
-                password = messagebox.askstring("Password", "Enter the password for the private key under user ID: " + self.parentWindow.getPrivateKeyByKeyId(appended_data['public_key_id']).userId) 
+                password = simpledialog.askstring("Password", "Enter the password for the private key under user ID: " + self.parentWindow.getPrivateKeyByKeyId(appended_data['public_key_id']).userId)
 
                 private_key = self.parentWindow.getPrivateKeyByKeyId(appended_data['public_key_id']).decrypt(password)
                 session_key = private_key.decrypt(encrypted_session_key, padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA1()), algorithm=hashes.SHA1(), label=None))
@@ -123,10 +123,13 @@ class ReceiveMessageGUI:
         
             public_key = self.parentWindow.getPublicKeyByKeyId(appended_data['public_key_id']).publicKey
             signature = base64.b64decode(appended_data['signature'])
-            if public_key.verify(signature, hashed_message, padding.PSS(mgf=padding.MGF1(hashes.SHA1()), salt_length=padding.PSS.MAX_LENGTH), hashes.SHA1()):
+
+            try:
+                public_key.verify(signature, hashed_message, padding.PSS(mgf=padding.MGF1(hashes.SHA1()), salt_length=padding.PSS.MAX_LENGTH), hashes.SHA1())
                 print("Signature verified")
-            else:
-                print("Signature not verified")
+            except Exception as e:
+                messagebox.showerror("Error", "Signature not verified")
+                return
 
 
         if isinstance(text, bytes):

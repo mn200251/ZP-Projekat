@@ -172,7 +172,7 @@ class SendMessageGUI:
             if compress and not encryption and not radix64:
                 with open(f"./../Messages/{destination_file}.txt", "wb") as file:
                     file.write(text)
-                    file.flush() 
+                    file.flush()
             else:
                 if not radix64:
                     text = text.decode()  

@@ -186,10 +186,11 @@ class PrivateKeyRing(KeyRing):
             self.keys.append(
                 PrivateKeyRow(publicKey=publicKey, privateKey=None, userId=userId, passcode=None, timestamp=timestamp,
                               encryptedPrivateKey=encryptedPrivateKey))
-            return False
+            return True
 
         # Error - key with that id already exists!
         print("Key with that id already exists!")
+        return False
 
     def save2Disk(self, filename: str):
         if len(self.keys) == 0:
